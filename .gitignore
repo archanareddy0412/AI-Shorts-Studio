@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# API keys
+.env
+.env.*
+!.env.example
+
+# Generated files
+output/
+uploads/
+*.mp4
+*.webm
+*.mp3
+*.wav
+*.srt
+
+# Next.js
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Python generated files
+backend/__pycache__/
+backend/output/
+backend/uploads/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
