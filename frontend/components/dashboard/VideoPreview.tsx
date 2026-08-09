@@ -36,8 +36,12 @@ export default function VideoPreview({
       formData.append("file", file);
 
       // Send video to backend
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL ||
+        "http://127.0.0.1:8000";
+
       const response = await fetch(
-        "http://127.0.0.1:8000/upload",
+        `${API_URL}/upload`,
         {
           method: "POST",
           body: formData,
