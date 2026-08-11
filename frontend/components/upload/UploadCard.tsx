@@ -8,7 +8,7 @@ import ProcessingScreen from "../processing/ProcessingScreen";
 import CompletedScreen from "../processing/CompletedScreen";
 
 export default function UploadCard() {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
   const [video, setVideo] = useState<File | null>(null);
 
@@ -20,14 +20,14 @@ export default function UploadCard() {
     inputRef.current?.click();
   }
 
-  function onFileChange(
-    e: React.ChangeEvent<HTMLInputElement>
-  ) {
+  function onFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
 
     const file = e.target.files[0];
+
+    console.log("Selected video:", file.name);
 
     setVideo(file);
     setScreen("preview");
@@ -40,8 +40,8 @@ export default function UploadCard() {
         ref={inputRef}
         type="file"
         accept="video/*"
-        hidden
         onChange={onFileChange}
+        className="hidden"
       />
 
       {/* Upload screen */}
@@ -65,6 +65,10 @@ export default function UploadCard() {
 
           <button
             type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              selectFile();
+            }}
             className="mt-8 bg-blue-600 px-8 py-3 rounded-xl text-white font-semibold"
           >
             Choose Video
