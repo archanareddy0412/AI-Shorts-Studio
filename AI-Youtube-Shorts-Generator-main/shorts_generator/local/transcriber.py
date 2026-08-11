@@ -130,7 +130,15 @@ def transcribe_local(media_path: str, language: Optional[str] = None) -> Dict:
 
     from ..config import LOCAL_WHISPER_VAD_FILTER, LOCAL_WHISPER_VAD_PARAMETERS
 
-    model = WhisperModel(LOCAL_WHISPER_MODEL, device=device, compute_type=compute_type)
+    print("[transcribe/local] STEP A: Loading Whisper model...", flush=True)
+
+    model = WhisperModel(
+        LOCAL_WHISPER_MODEL,
+        device=device,
+        compute_type=compute_type
+    )
+
+    print("[transcribe/local] STEP B: Whisper model loaded successfully", flush=True)
 
     transcribe_kwargs = {
         "audio": media_path,
@@ -144,10 +152,20 @@ def transcribe_local(media_path: str, language: Optional[str] = None) -> Dict:
     else:
         transcribe_kwargs["vad_filter"] = False
 
+        print("[transcribe/local] STEP C: Starting transcription...", flush=True)
+
     segments_iter, info = model.transcribe(**transcribe_kwargs)
 
-    segments = []
+    print("[transcribe/local] STEP D: Transcription iterator created", flush=True)
+
+    print("[transcribe/local] STEP E: Reading transcription segments...", flush=True)
+
     for s in segments_iter:
+        print(
+            f"[transcribe/local] segment: {s.start:.1f}s -> {s.end:.1f}s",
+            flush=True
+        )
+
         segments.append({
             "start": float(s.start),
             "end": float(s.end),
