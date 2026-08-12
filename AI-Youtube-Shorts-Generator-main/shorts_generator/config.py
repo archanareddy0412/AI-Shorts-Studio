@@ -26,7 +26,18 @@ LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai").strip().lower()
 LOCAL_WHISPER_MODEL = os.getenv("LOCAL_WHISPER_MODEL", "base")
 LOCAL_WHISPER_DEVICE = os.getenv("LOCAL_WHISPER_DEVICE", "auto")  # auto / cpu / cuda
 LOCAL_OUTPUT_DIR = os.getenv("LOCAL_OUTPUT_DIR", "output")
+# Transcription provider
+# local = use faster-whisper
+# api = use production transcription service
+TRANSCRIPTION_PROVIDER = os.getenv(
+    "TRANSCRIPTION_PROVIDER",
+    "local"
+).strip().lower()
 
+TRANSCRIPTION_API_KEY = os.getenv(
+    "TRANSCRIPTION_API_KEY",
+    ""
+).strip()
 # VAD (Voice Activity Detection) settings for faster-whisper
 # Default threshold is 0.5; lower = more sensitive, higher = less sensitive
 # Default min_speech_duration_ms is 250ms; increase to avoid tiny false positives
