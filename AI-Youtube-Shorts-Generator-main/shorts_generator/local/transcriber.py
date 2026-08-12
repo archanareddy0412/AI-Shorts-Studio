@@ -20,6 +20,7 @@ Returns the same shape the highlight generator expects:
 import json
 import os
 import re
+import subprocess
 import time
 from pathlib import Path
 from typing import Dict, Optional
@@ -446,42 +447,99 @@ Return only the JSON object.
         key=lambda x: x["start"]
     )
 
-    duration = segments[-1]["end"]
+    # -------------------------------------------------------
+    # USE ACTUAL VIDEO DURATION
+    # -------------------------------------------------------
 
-    # Gemini may expose video duration in metadata.
     try:
-        video_metadata = getattr(
-            uploaded_file,
-            "video_metadata",
-            None,
+        probe_result = subprocess.run(
+            [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_entries",
+                "format=duration",
+                "-of",
+                "default=noprint_wrappers=1:nokey=1",
+                media_path,
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
         )
 
-        video_duration = getattr(
-            video_metadata,
-            "video_duration",
-            None,
+        actual_duration = float(
+            probe_result.stdout.strip()
         )
-
-        if video_duration:
-            duration_text = str(
-                video_duration
-            ).rstrip("s")
-
-            duration = max(
-                duration,
-                float(duration_text),
-            )
 
     except (
-        TypeError,
+        subprocess.SubprocessError,
         ValueError,
+        FileNotFoundError,
     ):
-        pass
+        actual_duration = segments[-1]["end"]
+
+    print(
+        f"[transcribe/gemini] "
+        f"Actual video duration: "
+        f"{actual_duration:.2f}s",
+        flush=True,
+    )
+
+    # -------------------------------------------------------
+    # REMOVE INVALID GEMINI TIMESTAMPS
+    # -------------------------------------------------------
+
+    clean_segments = []
+
+    for segment in segments:
+        start = float(segment["start"])
+        end = float(segment["end"])
+
+        # Ignore anything completely outside
+        # the real video.
+        if start >= actual_duration:
+            continue
+
+        # Clamp segments that run past the
+        # actual end of the video.
+        end = min(
+            end,
+            actual_duration,
+        )
+
+        if end <= start:
+            continue
+
+        clean_segments.append(
+            {
+                "start": start,
+                "end": end,
+                "text": segment["text"],
+            }
+        )
+
+    segments = clean_segments
+
+    if not segments:
+        raise RuntimeError(
+            "Gemini returned no transcript segments "
+            "inside the actual video duration."
+        )
 
     transcript = {
-        "duration": float(duration),
+        "duration": actual_duration,
         "segments": segments,
     }
+
+    print(
+        f"[transcribe/gemini] "
+        f"{len(segments)} valid segments "
+        f"within {actual_duration:.1f}s",
+        flush=True,
+    )
+
+    return transcript
 
     print(
         f"[transcribe/gemini] "
